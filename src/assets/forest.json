@@ -1,0 +1,52 @@
+{
+  "trees": [
+    {
+      "featureIndex": 0,
+      "threshold": 5,
+      "left": {
+        "featureIndex": 1,
+        "threshold": 10,
+        "left": { "value": 70 },
+        "right": { "value": 80 }
+      },
+      "right": {
+        "featureIndex": 2,
+        "threshold": 2,
+        "left": { "value": 85 },
+        "right": { "value": 95 }
+      }
+    },
+    {
+      "featureIndex": 3,
+      "threshold": 1,
+      "left": {
+        "featureIndex": 0,
+        "threshold": 8,
+        "left": { "value": 65 },
+        "right": { "value": 75 }
+      },
+      "right": {
+        "featureIndex": 1,
+        "threshold": 12,
+        "left": { "value": 90 },
+        "right": { "value": 100 }
+      }
+    },
+    {
+      "featureIndex": 4,
+      "threshold": 1,
+      "left": {
+        "featureIndex": 5,
+        "threshold": 3,
+        "left": { "value": 60 },
+        "right": { "value": 70 }
+      },
+      "right": {
+        "featureIndex": 6,
+        "threshold": 0.5,
+        "left": { "value": 85 },
+        "right": { "value": 95 }
+      }
+    }
+  ]
+}
