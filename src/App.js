@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
+  // ADD: state for inputs with sensible defaults
   const [attendance, setAttendance] = useState(90);        // percent 0-100
   const [studyHours, setStudyHours] = useState(12);        // hours per week
   const [parentEdu, setParentEdu] = useState(2);           // scale 0-4
@@ -12,6 +13,49 @@ function App() {
   const [internet, setInternet] = useState(true);          // boolean
   const [tutoring, setTutoring] = useState(false);         // boolean
 
+  // ADD: derived score, grade and risk
+  // const predictedScore = useMemo(() => {
+  //   const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
+  //   const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
+  //   const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
+  //   const extraNorm = Math.min(Math.max(extracurricular, 0), 5) / 5;
+  //   const resourcesNorm = Math.min(Math.max(resources, 0), 5) / 5;
+
+  //   let score =
+  //     attendance * 0.55 +                 // attendance has largest impact
+  //     studyImpact * 25 +                  // study hours
+  //     parentEduNorm * 5 +
+  //     incomeNorm * 5 +
+  //     extraNorm * 5 +
+  //     resourcesNorm * 5 +
+  //     (internet ? 3 : 0) +
+  //     (tutoring ? 7 : 0);
+
+  //   // clamp to 0..100
+  //   score = Math.max(0, Math.min(100, score));
+  //   return Math.round(score);
+  // }, [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
+
+  // const grade = useMemo(() => {
+  //   if (predictedScore >= 90) return 'A';
+  //   if (predictedScore >= 80) return 'B';
+  //   if (predictedScore >= 70) return 'C';
+  //   if (predictedScore >= 60) return 'D';
+  //   return 'F';
+  // }, [predictedScore]);
+
+  // const risk = useMemo(() => {
+  //   if (predictedScore >= 80) return 'Low';
+  //   if (predictedScore >= 60) return 'Medium';
+  //   return 'High';
+  // }, [predictedScore]);
+
+  // // progress ring after score is computed
+  // const progressDeg = (predictedScore / 100) * 360;
+
+///////////////////////////////////////////////////////////////////////////////////
+
+  // ADD: load Random Forest model (from public/model/forest.json)
   const [forestModel, setForestModel] = useState(null);
   const [modelError, setModelError] = useState(null);
 
@@ -22,6 +66,7 @@ function App() {
       .catch(err => setModelError(err?.message || 'Failed to load forest model'));
   }, []);
 
+  // Helper: traverse a single decision tree
   const evalTree = (node, features) => {
     let n = node;
     while (n) {
@@ -32,6 +77,7 @@ function App() {
     return 0;
   };
 
+  // Helper: evaluate forest (regression) by averaging tree outputs
   const evalForest = (features, forest) => {
     if (!forest || !Array.isArray(forest.trees) || forest.trees.length === 0) return null;
     const preds = forest.trees.map(t => evalTree(t, features));
@@ -39,6 +85,7 @@ function App() {
     return avg;
   };
 
+  // Feature vector used by the RF model (order must match training)
   const rfFeatures = useMemo(() => ([
     attendance,
     studyHours,
@@ -50,6 +97,9 @@ function App() {
     tutoring ? 1 : 0,
   ]), [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
 
+  // ... existing code ...
+
+  // REPLACE: derived score, now using Random Forest (fallback to heuristic if model missing)
   const predictedScore = useMemo(() => {
     const rf = evalForest(rfFeatures, forestModel);
     if (rf !== null && Number.isFinite(rf)) {
@@ -57,6 +107,7 @@ function App() {
       return Math.round(clamped);
     }
 
+    // Fallback to existing heuristic if model isn't loaded yet
     const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
     const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
     const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
@@ -76,7 +127,7 @@ function App() {
     score = Math.max(0, Math.min(100, score));
     return Math.round(score);
   }, [rfFeatures, forestModel, attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
-
+  
   const grade = useMemo(() => {
     if (predictedScore >= 90) return 'A';
     if (predictedScore >= 80) return 'B';
@@ -93,6 +144,7 @@ function App() {
 
   const progressDeg = (predictedScore / 100) * 360;
 
+  // ADD: evaluation state and metrics helpers (grades classification)
   const [actualGrade, setActualGrade] = useState('B');
   const gradeLabels = useMemo(() => ['A', 'B', 'C', 'D', 'F'], []);
   const [evalRecords, setEvalRecords] = useState([]);
@@ -135,8 +187,8 @@ function App() {
       let fp = 0, fn = 0;
       for (let i = 0; i < n; i++) {
         if (i !== k) {
-          fp += mat[i][k]; 
-          fn += mat[k][i]; 
+          fp += mat[i][k]; // predicted k but actually i
+          fn += mat[k][i]; // actually k but predicted i
         }
       }
       const precision = (tp + fp) ? tp / (tp + fp) : 0;
@@ -156,6 +208,7 @@ function App() {
     return { accuracy, precisions, recalls, f1s, macro };
   }, [confusionMatrix, gradeLabels]);
 
+  // ADD: quick reset to defaults
   const handleReset = () => {
     setAttendance(0);
     setStudyHours(0);
@@ -190,6 +243,7 @@ function App() {
               onChange={e => setAttendance(Number(e.target.value))}
               style={{padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb'}}
             />
+            <span style={{ fontSize: 12, color: '#6b7280' }}>{attendance}%</span>
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
@@ -351,20 +405,84 @@ function App() {
       <aside style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: 20 }}>
         <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: 20 }}>Evaluation</h2>
 
-        <div style={{ color: '#374151', fontSize: 18, lineHeight: 1.5, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ fontSize: 13, color: '#374151' }}>Actual Grade</span>
+            <select
+              value={actualGrade}
+              onChange={e => setActualGrade(e.target.value)}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+            >
+              {gradeLabels.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </label>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <button
+              onClick={addEvalRecord}
+              style={{
+                padding: '10px 14px', borderRadius: 10, border: 'none',
+                background: '#10b981', color: '#fff', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 14px rgba(16,185,129,0.35)'
+              }}
+            >
+              Add to evaluation
+            </button>
+            <button
+              onClick={clearEvalRecords}
+              style={{
+                padding: '10px 14px', borderRadius: 10, border: 'none',
+                background: '#ef4444', color: '#fff', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 14px rgba(239,68,68,0.35)'
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div style={{ color: '#374151', fontSize: 14, lineHeight: 1.5, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ background: '#eff6ff', color: '#1e40af', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
+            <span style={{ background: '#eff6ff', color: '#1e40af', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
               Accuracy: {(metrics.accuracy * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
+            <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
               Precision (macro): {(metrics.macro.precision * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
+            <span style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
               Recall (macro): {(metrics.macro.recall * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#fae8ff', color: '#6b21a8', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
+            <span style={{ background: '#fae8ff', color: '#6b21a8', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
               F1-score (macro): {(metrics.macro.f1 * 100).toFixed(1)}%
             </span>
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 13, color: '#374151', marginBottom: 8, fontWeight: 700 }}>Confusion Matrix (Actual × Predicted)</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', fontSize: 12, color: '#6b7280', padding: 6 }}>Actual \\ Pred</th>
+                  {gradeLabels.map(g => (
+                    <th key={g} style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{g}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {gradeLabels.map((actual, i) => (
+                  <tr key={actual}>
+                    <td style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{actual}</td>
+                    {gradeLabels.map((pred, j) => (
+                      <td key={pred} style={{ padding: 6, border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                        {confusionMatrix[i]?.[j] ?? 0}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </aside>
