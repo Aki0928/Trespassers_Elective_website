@@ -132,6 +132,69 @@ function App() {
 
   const progressDeg = (predictedScore / 100) * 360;
 
+  const [actualGrade, setActualGrade] = useState('B');
+  const gradeLabels = useMemo(() => ['A', 'B', 'C', 'D', 'F'], []);
+  const [evalRecords, setEvalRecords] = useState([]);
+
+  const addEvalRecord = () => {
+    setEvalRecords(prev => [...prev, { actual: actualGrade, predicted: grade }]);
+  };
+
+  const clearEvalRecords = () => setEvalRecords([]);
+
+  const confusionMatrix = useMemo(() => {
+    const n = gradeLabels.length;
+    const idx = Object.fromEntries(gradeLabels.map((g, i) => [g, i]));
+    const mat = Array.from({ length: n }, () => Array(n).fill(0));
+    for (const r of evalRecords) {
+      const ai = idx[r.actual];
+      const pi = idx[r.predicted];
+      if (ai !== undefined && pi !== undefined) {
+        mat[ai][pi] += 1;
+      }
+    }
+    return mat;
+  }, [evalRecords, gradeLabels]);
+
+  const metrics = useMemo(() => {
+    const mat = confusionMatrix;
+    const n = gradeLabels.length;
+    let total = 0, correct = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        total += mat[i][j];
+        if (i === j) correct += mat[i][j];
+      }
+    }
+    const accuracy = total ? correct / total : 0;
+
+    const precisions = [], recalls = [], f1s = [];
+    for (let k = 0; k < n; k++) {
+      const tp = mat[k][k];
+      let fp = 0, fn = 0;
+      for (let i = 0; i < n; i++) {
+        if (i !== k) {
+          fp += mat[i][k]; // predicted k but actually i
+          fn += mat[k][i]; // actually k but predicted i
+        }
+      }
+      const precision = (tp + fp) ? tp / (tp + fp) : 0;
+      const recall = (tp + fn) ? tp / (tp + fn) : 0;
+      const f1 = (precision + recall) ? (2 * precision * recall) / (precision + recall) : 0;
+      precisions.push(precision);
+      recalls.push(recall);
+      f1s.push(f1);
+    }
+
+    const macro = {
+      precision: n ? (precisions.reduce((a, b) => a + b, 0) / n) : 0,
+      recall:    n ? (recalls.reduce((a, b) => a + b, 0) / n) : 0,
+      f1:        n ? (f1s.reduce((a, b) => a + b, 0) / n) : 0,
+    };
+
+    return { accuracy, precisions, recalls, f1s, macro };
+  }, [confusionMatrix, gradeLabels]);
+
   const handleReset = () => {
     setAttendance(0);
     setStudyHours(0);
@@ -320,6 +383,91 @@ function App() {
                 Reset
               </button>
             </div>
+          </div>
+        </div>
+      </aside>
+
+      <aside style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: 20 }}>
+        <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: 20 }}>Evaluation</h2>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ fontSize: 13, color: '#374151' }}>Actual Grade</span>
+            <select
+              value={actualGrade}
+              onChange={e => setActualGrade(e.target.value)}
+              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+            >
+              {gradeLabels.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </label>
+
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <button
+              onClick={addEvalRecord}
+              style={{
+                padding: '10px 14px', borderRadius: 10, border: 'none',
+                background: '#10b981', color: '#fff', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 14px rgba(16,185,129,0.35)'
+              }}
+            >
+              Add to evaluation
+            </button>
+            <button
+              onClick={clearEvalRecords}
+              style={{
+                padding: '10px 14px', borderRadius: 10, border: 'none',
+                background: '#ef4444', color: '#fff', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 14px rgba(239,68,68,0.35)'
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div style={{ color: '#374151', fontSize: 14, lineHeight: 1.5, marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ background: '#eff6ff', color: '#1e40af', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              Accuracy: {(metrics.accuracy * 100).toFixed(1)}%
+            </span>
+            <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              Precision (macro): {(metrics.macro.precision * 100).toFixed(1)}%
+            </span>
+            <span style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              Recall (macro): {(metrics.macro.recall * 100).toFixed(1)}%
+            </span>
+            <span style={{ background: '#fae8ff', color: '#6b21a8', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+              F1-score (macro): {(metrics.macro.f1 * 100).toFixed(1)}%
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 13, color: '#374151', marginBottom: 8, fontWeight: 700 }}>Confusion Matrix (Actual × Predicted)</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', fontSize: 12, color: '#6b7280', padding: 6 }}>Actual \\ Pred</th>
+                  {gradeLabels.map(g => (
+                    <th key={g} style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{g}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {gradeLabels.map((actual, i) => (
+                  <tr key={actual}>
+                    <td style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{actual}</td>
+                    {gradeLabels.map((pred, j) => (
+                      <td key={pred} style={{ padding: 6, border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                        {confusionMatrix[i]?.[j] ?? 0}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </aside>
