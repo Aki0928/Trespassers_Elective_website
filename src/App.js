@@ -60,7 +60,7 @@ function App() {
   const [modelError, setModelError] = useState(null);
 
   useEffect(() => {
-    fetch(`${process.env.PUBLIC_URL}/model/forest.json`)
+    fetch(`./assets/forest.json`)
       .then(res => res.json())
       .then(setForestModel)
       .catch(err => setModelError(err?.message || 'Failed to load forest model'));
