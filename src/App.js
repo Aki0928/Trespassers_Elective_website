@@ -472,68 +472,68 @@ function App() {
         </div>
       </aside>
 
-      <section style={{ marginTop: 24 }}>
-        <h1 style={{ color: '#ffffff', textAlign: 'center', marginBottom: 16 }}>Profiles</h1>
+      // <section style={{ marginTop: 24 }}>
+      //   <h1 style={{ color: '#ffffff', textAlign: 'center', marginBottom: 16 }}>Profiles</h1>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))', gap: 16 }}>
-          <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-              {/* <div style={{
-                width: 90, height: 90, borderRadius: '50%',
-                background: 'radial-gradient(circle at 35% 35%, #4f46e5, #a78bfa)',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-              }} /> */}
-              <img src={require("./assets/ren.png")} alt="rens"
-                style={{
-                  width: 150, height: 150, borderRadius: '50%',
-                }}
-              />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Renato Jr. M. Catucod</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>Developer</div>
-            </div>
-          </div>
+      //   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))', gap: 16 }}>
+      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
+      //         {/* <div style={{
+      //           width: 90, height: 90, borderRadius: '50%',
+      //           background: 'radial-gradient(circle at 35% 35%, #4f46e5, #a78bfa)',
+      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
+      //         }} /> */}
+      //         <img src={require("./assets/ren.png")} alt="rens"
+      //           style={{
+      //             width: 150, height: 150, borderRadius: '50%',
+      //           }}
+      //         />
+      //       </div>
+      //       <div style={{ textAlign: 'center' }}>
+      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Renato Jr. M. Catucod</div>
+      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Developer</div>
+      //       </div>
+      //     </div>
 
-          <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-              {/* <div style={{
-                width: 90, height: 90, borderRadius: '50%',
-                background: 'radial-gradient(circle at 35% 35%, #0ea5e9, #22d3ee)',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-              }} /> */}
-              <img src={require("./assets/donks.jpg")} alt="donks"
-                style={{
-                  width: 150, height: 150, borderRadius: '50%',
-                }}
-              />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Donalyn O. Cortiz</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant  developer</div>
-            </div>
-          </div>
+      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
+      //         {/* <div style={{
+      //           width: 90, height: 90, borderRadius: '50%',
+      //           background: 'radial-gradient(circle at 35% 35%, #0ea5e9, #22d3ee)',
+      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
+      //         }} /> */}
+      //         <img src={require("./assets/donks.jpg")} alt="donks"
+      //           style={{
+      //             width: 150, height: 150, borderRadius: '50%',
+      //           }}
+      //         />
+      //       </div>
+      //       <div style={{ textAlign: 'center' }}>
+      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Donalyn O. Cortiz</div>
+      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant  developer</div>
+      //       </div>
+      //     </div>
 
-          <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-              {/* <div style={{
-                width: 90, height: 90, borderRadius: '50%',
-                background: 'radial-gradient(circle at 35% 35%, #10b981, #34d399)',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-              }} /> */}
-              <img src={require("./assets/jans.jpg")} alt="jans"
-                style={{
-                  width: 150, height: 150, borderRadius: '50%',
-                }}
-              />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Janice V. Conde</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant developer</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
+      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
+      //         {/* <div style={{
+      //           width: 90, height: 90, borderRadius: '50%',
+      //           background: 'radial-gradient(circle at 35% 35%, #10b981, #34d399)',
+      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
+      //         }} /> */}
+      //         <img src={require("./assets/jans.jpg")} alt="jans"
+      //           style={{
+      //             width: 150, height: 150, borderRadius: '50%',
+      //           }}
+      //         />
+      //       </div>
+      //       <div style={{ textAlign: 'center' }}>
+      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Janice V. Conde</div>
+      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant developer</div>
+      //       </div>
+      //     </div>
+      //   </div>
+      // </section>
     </div>
   );
 }
