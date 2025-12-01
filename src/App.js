@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
+  // ADD: state for inputs with sensible defaults
   const [attendance, setAttendance] = useState(90);        // percent 0-100
   const [studyHours, setStudyHours] = useState(12);        // hours per week
   const [parentEdu, setParentEdu] = useState(2);           // scale 0-4
@@ -11,45 +12,6 @@ function App() {
   const [resources, setResources] = useState(3);           // scale 0-5
   const [internet, setInternet] = useState(true);          // boolean
   const [tutoring, setTutoring] = useState(false);         // boolean
-
-  // const predictedScore = useMemo(() => {
-  //   const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
-  //   const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
-  //   const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
-  //   const extraNorm = Math.min(Math.max(extracurricular, 0), 5) / 5;
-  //   const resourcesNorm = Math.min(Math.max(resources, 0), 5) / 5;
-
-  //   let score =
-  //     attendance * 0.55 +                 // attendance has largest impact
-  //     studyImpact * 25 +                  // study hours
-  //     parentEduNorm * 5 +
-  //     incomeNorm * 5 +
-  //     extraNorm * 5 +
-  //     resourcesNorm * 5 +
-  //     (internet ? 3 : 0) +
-  //     (tutoring ? 7 : 0);
-
-  //   // clamp to 0..100
-  //   score = Math.max(0, Math.min(100, score));
-  //   return Math.round(score);
-  // }, [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
-
-  // const grade = useMemo(() => {
-  //   if (predictedScore >= 90) return 'A';
-  //   if (predictedScore >= 80) return 'B';
-  //   if (predictedScore >= 70) return 'C';
-  //   if (predictedScore >= 60) return 'D';
-  //   return 'F';
-  // }, [predictedScore]);
-
-  // const risk = useMemo(() => {
-  //   if (predictedScore >= 80) return 'Low';
-  //   if (predictedScore >= 60) return 'Medium';
-  //   return 'High';
-  // }, [predictedScore]);
-
-  // // progress ring after score is computed
-  // const progressDeg = (predictedScore / 100) * 360;
 
   const [forestModel, setForestModel] = useState(null);
   const [modelError, setModelError] = useState(null);
@@ -64,7 +26,7 @@ function App() {
   const evalTree = (node, features) => {
     let n = node;
     while (n) {
-      if (typeof n.value === 'number') return n.value; 
+      if (typeof n.value === 'number') return n.value; // leaf node
       const f = features[n.featureIndex];
       n = f <= n.threshold ? n.left : n.right;
     }
@@ -96,7 +58,7 @@ function App() {
       return Math.round(clamped);
     }
 
-    const studyImpact = Math.min(studyHours, 30) / 30;      
+    const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
     const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
     const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
     const extraNorm = Math.min(Math.max(extracurricular, 0), 5) / 5;
@@ -174,8 +136,8 @@ function App() {
       let fp = 0, fn = 0;
       for (let i = 0; i < n; i++) {
         if (i !== k) {
-          fp += mat[i][k]; // predicted k but actually i
-          fn += mat[k][i]; // actually k but predicted i
+          fp += mat[i][k]; 
+          fn += mat[k][i]; 
         }
       }
       const precision = (tp + fp) ? tp / (tp + fp) : 0;
@@ -207,7 +169,7 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 60%, #a78bfa 100%)', padding: 24, paddingBottom: "200px" }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 60%, #a78bfa 100%)', padding: 24, paddingBottom: "50px" }}>
       
       <h1 style={{
         color: "white",
@@ -222,11 +184,12 @@ function App() {
           <label style={{ display: 'grid', gap: 6 }}>
             <span style={{ fontSize: 13, color: '#374151' }}>Attendance (%)</span>
             <input
-              type="range"
+              type="number"
               min={0}
               max={100}
               value={attendance}
               onChange={e => setAttendance(Number(e.target.value))}
+              style={{padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb'}}
             />
             <span style={{ fontSize: 12, color: '#6b7280' }}>{attendance}%</span>
           </label>
@@ -390,150 +353,23 @@ function App() {
       <aside style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: 20 }}>
         <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: 20 }}>Evaluation</h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 13, color: '#374151' }}>Actual Grade</span>
-            <select
-              value={actualGrade}
-              onChange={e => setActualGrade(e.target.value)}
-              style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb' }}
-            >
-              {gradeLabels.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </label>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-            <button
-              onClick={addEvalRecord}
-              style={{
-                padding: '10px 14px', borderRadius: 10, border: 'none',
-                background: '#10b981', color: '#fff', fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 6px 14px rgba(16,185,129,0.35)'
-              }}
-            >
-              Add to evaluation
-            </button>
-            <button
-              onClick={clearEvalRecords}
-              style={{
-                padding: '10px 14px', borderRadius: 10, border: 'none',
-                background: '#ef4444', color: '#fff', fontWeight: 700, cursor: 'pointer',
-                boxShadow: '0 6px 14px rgba(239,68,68,0.35)'
-              }}
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        <div style={{ color: '#374151', fontSize: 14, lineHeight: 1.5, marginBottom: 12 }}>
+        <div style={{ color: '#374151', fontSize: 18, lineHeight: 1.5, marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ background: '#eff6ff', color: '#1e40af', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#eff6ff', color: '#1e40af', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
               Accuracy: {(metrics.accuracy * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
               Precision (macro): {(metrics.macro.precision * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
               Recall (macro): {(metrics.macro.recall * 100).toFixed(1)}%
             </span>
-            <span style={{ background: '#fae8ff', color: '#6b21a8', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+            <span style={{ background: '#fae8ff', color: '#6b21a8', padding: '6px 10px', borderRadius: 8, fontSize: 18, fontWeight: 700 }}>
               F1-score (macro): {(metrics.macro.f1 * 100).toFixed(1)}%
             </span>
           </div>
         </div>
-
-        <div>
-          <div style={{ fontSize: 13, color: '#374151', marginBottom: 8, fontWeight: 700 }}>Confusion Matrix (Actual × Predicted)</div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', fontSize: 12, color: '#6b7280', padding: 6 }}>Actual \\ Pred</th>
-                  {gradeLabels.map(g => (
-                    <th key={g} style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{g}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {gradeLabels.map((actual, i) => (
-                  <tr key={actual}>
-                    <td style={{ fontSize: 12, color: '#6b7280', padding: 6 }}>{actual}</td>
-                    {gradeLabels.map((pred, j) => (
-                      <td key={pred} style={{ padding: 6, border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                        {confusionMatrix[i]?.[j] ?? 0}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </aside>
-
-      // <section style={{ marginTop: 24 }}>
-      //   <h1 style={{ color: '#ffffff', textAlign: 'center', marginBottom: 16 }}>Profiles</h1>
-
-      //   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(240px, 1fr))', gap: 16 }}>
-      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-      //         {/* <div style={{
-      //           width: 90, height: 90, borderRadius: '50%',
-      //           background: 'radial-gradient(circle at 35% 35%, #4f46e5, #a78bfa)',
-      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-      //         }} /> */}
-      //         <img src={require("./assets/ren.png")} alt="rens"
-      //           style={{
-      //             width: 150, height: 150, borderRadius: '50%',
-      //           }}
-      //         />
-      //       </div>
-      //       <div style={{ textAlign: 'center' }}>
-      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Renato Jr. M. Catucod</div>
-      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Developer</div>
-      //       </div>
-      //     </div>
-
-      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-      //         {/* <div style={{
-      //           width: 90, height: 90, borderRadius: '50%',
-      //           background: 'radial-gradient(circle at 35% 35%, #0ea5e9, #22d3ee)',
-      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-      //         }} /> */}
-      //         <img src={require("./assets/donks.jpg")} alt="donks"
-      //           style={{
-      //             width: 150, height: 150, borderRadius: '50%',
-      //           }}
-      //         />
-      //       </div>
-      //       <div style={{ textAlign: 'center' }}>
-      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Donalyn O. Cortiz</div>
-      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant  developer</div>
-      //       </div>
-      //     </div>
-
-      //     <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 10px 25px rgba(0,0,0,0.15)' }}>
-      //       <div style={{ display: 'grid', placeItems: 'center', marginBottom: 12 }}>
-      //         {/* <div style={{
-      //           width: 90, height: 90, borderRadius: '50%',
-      //           background: 'radial-gradient(circle at 35% 35%, #10b981, #34d399)',
-      //           boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
-      //         }} /> */}
-      //         <img src={require("./assets/jans.jpg")} alt="jans"
-      //           style={{
-      //             width: 150, height: 150, borderRadius: '50%',
-      //           }}
-      //         />
-      //       </div>
-      //       <div style={{ textAlign: 'center' }}>
-      //         <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>Janice V. Conde</div>
-      //         <div style={{ fontSize: 12, color: '#6b7280' }}>Assistant developer</div>
-      //       </div>
-      //     </div>
-      //   </div>
-      // </section>
     </div>
   );
 }
