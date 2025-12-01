@@ -3,7 +3,6 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
-  // ADD: state for inputs with sensible defaults
   const [attendance, setAttendance] = useState(90);        // percent 0-100
   const [studyHours, setStudyHours] = useState(12);        // hours per week
   const [parentEdu, setParentEdu] = useState(2);           // scale 0-4
@@ -13,17 +12,99 @@ function App() {
   const [internet, setInternet] = useState(true);          // boolean
   const [tutoring, setTutoring] = useState(false);         // boolean
 
-  // ADD: derived score, grade and risk
+  // const predictedScore = useMemo(() => {
+  //   const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
+  //   const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
+  //   const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
+  //   const extraNorm = Math.min(Math.max(extracurricular, 0), 5) / 5;
+  //   const resourcesNorm = Math.min(Math.max(resources, 0), 5) / 5;
+
+  //   let score =
+  //     attendance * 0.55 +                 // attendance has largest impact
+  //     studyImpact * 25 +                  // study hours
+  //     parentEduNorm * 5 +
+  //     incomeNorm * 5 +
+  //     extraNorm * 5 +
+  //     resourcesNorm * 5 +
+  //     (internet ? 3 : 0) +
+  //     (tutoring ? 7 : 0);
+
+  //   // clamp to 0..100
+  //   score = Math.max(0, Math.min(100, score));
+  //   return Math.round(score);
+  // }, [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
+
+  // const grade = useMemo(() => {
+  //   if (predictedScore >= 90) return 'A';
+  //   if (predictedScore >= 80) return 'B';
+  //   if (predictedScore >= 70) return 'C';
+  //   if (predictedScore >= 60) return 'D';
+  //   return 'F';
+  // }, [predictedScore]);
+
+  // const risk = useMemo(() => {
+  //   if (predictedScore >= 80) return 'Low';
+  //   if (predictedScore >= 60) return 'Medium';
+  //   return 'High';
+  // }, [predictedScore]);
+
+  // // progress ring after score is computed
+  // const progressDeg = (predictedScore / 100) * 360;
+
+  const [forestModel, setForestModel] = useState(null);
+  const [modelError, setModelError] = useState(null);
+
+  useEffect(() => {
+    fetch(`${process.env.PUBLIC_URL}/model/forest.json`)
+      .then(res => res.json())
+      .then(setForestModel)
+      .catch(err => setModelError(err?.message || 'Failed to load forest model'));
+  }, []);
+
+  const evalTree = (node, features) => {
+    let n = node;
+    while (n) {
+      if (typeof n.value === 'number') return n.value; 
+      const f = features[n.featureIndex];
+      n = f <= n.threshold ? n.left : n.right;
+    }
+    return 0;
+  };
+
+  const evalForest = (features, forest) => {
+    if (!forest || !Array.isArray(forest.trees) || forest.trees.length === 0) return null;
+    const preds = forest.trees.map(t => evalTree(t, features));
+    const avg = preds.reduce((a, b) => a + b, 0) / preds.length;
+    return avg;
+  };
+
+  const rfFeatures = useMemo(() => ([
+    attendance,
+    studyHours,
+    parentEdu,
+    income,
+    extracurricular,
+    resources,
+    internet ? 1 : 0,
+    tutoring ? 1 : 0,
+  ]), [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
+
   const predictedScore = useMemo(() => {
-    const studyImpact = Math.min(studyHours, 30) / 30;          // 0..1
+    const rf = evalForest(rfFeatures, forestModel);
+    if (rf !== null && Number.isFinite(rf)) {
+      const clamped = Math.max(0, Math.min(100, rf));
+      return Math.round(clamped);
+    }
+
+    const studyImpact = Math.min(studyHours, 30) / 30;      
     const parentEduNorm = Math.min(Math.max(parentEdu, 0), 4) / 4;
     const incomeNorm = Math.min(Math.max(income, 0), 3) / 3;
     const extraNorm = Math.min(Math.max(extracurricular, 0), 5) / 5;
     const resourcesNorm = Math.min(Math.max(resources, 0), 5) / 5;
 
     let score =
-      attendance * 0.55 +                 // attendance has largest impact
-      studyImpact * 25 +                  // study hours
+      attendance * 0.55 +
+      studyImpact * 25 +
       parentEduNorm * 5 +
       incomeNorm * 5 +
       extraNorm * 5 +
@@ -31,10 +112,9 @@ function App() {
       (internet ? 3 : 0) +
       (tutoring ? 7 : 0);
 
-    // clamp to 0..100
     score = Math.max(0, Math.min(100, score));
     return Math.round(score);
-  }, [attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
+  }, [rfFeatures, forestModel, attendance, studyHours, parentEdu, income, extracurricular, resources, internet, tutoring]);
 
   const grade = useMemo(() => {
     if (predictedScore >= 90) return 'A';
@@ -50,10 +130,8 @@ function App() {
     return 'High';
   }, [predictedScore]);
 
-  // progress ring after score is computed
   const progressDeg = (predictedScore / 100) * 360;
 
-  // ADD: quick reset to defaults
   const handleReset = () => {
     setAttendance(0);
     setStudyHours(0);
