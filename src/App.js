@@ -3,7 +3,6 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
-  // ADD: state for inputs with sensible defaults
   const [attendance, setAttendance] = useState(90);        // percent 0-100
   const [studyHours, setStudyHours] = useState(12);        // hours per week
   const [parentEdu, setParentEdu] = useState(2);           // scale 0-4
@@ -191,7 +190,6 @@ function App() {
               onChange={e => setAttendance(Number(e.target.value))}
               style={{padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb'}}
             />
-            <span style={{ fontSize: 12, color: '#6b7280' }}>{attendance}%</span>
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
